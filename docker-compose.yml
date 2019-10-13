@@ -4,36 +4,39 @@ services:
   # add nginx service
   nginx:
     image: nginx:alpine
+    container_name: 'nginx'
     depends_on:
-      - flask-template
+      - trade-api
     ports:
-      - "80:80"
-      - "443:443"
+      - 80:80
+      # - 443:443
     networks:
       - db
     volumes:
       - ./data/nginx:/etc/nginx/conf.d
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
+      # - ./data/certbot/conf:/etc/letsencrypt
+      # - ./data/certbot/www:/var/www/certbot
 
   # Cerbot service to shh connection
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
+  # certbot:
+  #   image: certbot/certbot
+  #   volumes:
+  #     - ./data/certbot/conf:/etc/letsencrypt
+  #     - ./data/certbot/www:/var/www/certbot
 
-  flask-template:
+  trade-api:
     # this is used for development only, use the tagged registry image instead
-    image: imadmoussa1/flask-api-uwsgi
+    build: .
+    container_name: 'trade-api'
     ports:
-      - "5000:5000"
+      - 5000:5000
     depends_on:
-      - postgres-data-store
-      - main-data-store
+      - postgres
+      - mongo
     secrets:
-      - postgres_db_uri
-      - main_data_store_db_uri
+      - postgres_uri
+      - mongo_uri
+      - fxcm
     environment:
       # flush python stdout
       - AUTHLIB_INSECURE_TRANSPORT=true
@@ -43,29 +46,31 @@ services:
     networks:
       - db
     volumes:
-      - ./blog_api:/var/app
+      - ./trade_api:/var/app
 
-  main-data-store:
+  mongo:
     image: mongo
-    hostname: main-data-store
+    hostname: mongo
+    container_name: 'mongo'
     ports:
-      - "27017:27017"
+      - 27017:27017
     secrets:
-      - main_data_store_admin_username
-      - main_data_store_admin_password
+      - mongo_admin_username
+      - mongo_admin_password
     environment:
-      MONGO_INITDB_ROOT_USERNAME_FILE: /run/secrets/main_data_store_admin_username
-      MONGO_INITDB_ROOT_PASSWORD_FILE: /run/secrets/main_data_store_admin_password
+      MONGO_INITDB_ROOT_USERNAME_FILE: /run/secrets/mongo_admin_username
+      MONGO_INITDB_ROOT_PASSWORD_FILE: /run/secrets/mongo_admin_password
     networks:
       - db
     volumes:
-      - main-data-store-volume:/data/db
+      - mongo-volume:/data/db
 
-  postgres-data-store:
+  postgres:
     image: postgres:11.0
+    container_name: 'postgres'
     restart: always
     ports:
-      - "5432:5432"
+      - 5432:5432
     secrets:
       - postgres_admin_username
       - postgres_admin_password
@@ -77,28 +82,32 @@ services:
     networks:
       - db
     volumes:
-      - postgres-data-store:/var/lib/postgresql/data
+      - postgres-volume:/var/lib/postgresql/data
 
   pgadmin:
     image: dpage/pgadmin4
+    container_name: 'pgadmin'
     restart: always
     ports:
-      - "8082:80"
+      - 8082:80
     depends_on:
-      - postgres-data-store
+      - postgres
     environment:
       PGADMIN_DEFAULT_EMAIL: test@test.com
       PGADMIN_DEFAULT_PASSWORD: pgadminpassword
     networks:
       - db
     volumes:
-      - pgadmin-data-store:/var/lib/pgadmin
+      - pgadmin-volume:/var/lib/pgadmin
 
   charts:
     image: quay.io/mongodb/charts:v0.10.0
     hostname: charts
+    container_name: charts
     ports:
       - 8083:80
+    depends_on:
+      - mongo
     volumes:
       - keys:/mongodb-charts/volumes/keys
       - logs:/mongodb-charts/volumes/logs
@@ -117,27 +126,29 @@ networks:
     driver: bridge
 
 secrets:
-  main_data_store_admin_username:
-    file: ./secrets/main_data_store_admin_username.txt
-  main_data_store_admin_password:
-    file: ./secrets/main_data_store_admin_password.txt
-  main_data_store_db_uri:
-    file: ./secrets/main_data_store_db_uri.txt
+  mongo_admin_username:
+    file: ./secrets/mongo_admin_username.txt
+  mongo_admin_password:
+    file: ./secrets/mongo_admin_password.txt
+  mongo_uri:
+    file: ./secrets/mongo_uri.txt
   postgres_admin_username:
     file: ./secrets/postgres_admin_username.txt
   postgres_admin_password:
     file: ./secrets/postgres_admin_password.txt
   postgres_db_name:
     file: ./secrets/postgres_db_name.txt
-  postgres_db_uri:
-    file: ./secrets/postgres_db_uri.txt
+  postgres_uri:
+    file: ./secrets/postgres_uri.txt
   charts-mongodb-uri:
     file: ./secrets/charts_mongodb_uri.txt
+  fxcm:
+    file: ./secrets/fxcm.cfg
 
 volumes:
-  main-data-store-volume:
-  postgres-data-store:
-  pgadmin-data-store:
+  mongo-volume:
+  postgres-volume:
+  pgadmin-volume:
   keys:
   logs:
   db-certs:

@@ -13,13 +13,13 @@ class Config(object):
     _bcrypt_log_rounds = None
     _secret_key = None
     _jwt_secret_key = None
-    _blog_database_name = None
-    _blog_drafts_collection_name = None
+    _trade_database_name = None
+    _trade_collection_name = None
 
     @staticmethod
     def sqlalchemy_database_uri():
         if Config._sqlalchemy_database_uri is None:
-            Config._sqlalchemy_database_uri = open("/run/secrets/postgres_db_uri", "r").readline()
+            Config._sqlalchemy_database_uri = open("/run/secrets/postgres_uri", "r").readline()
         return Config._sqlalchemy_database_uri
 
     @staticmethod
@@ -61,26 +61,26 @@ class Config(object):
     @staticmethod
     def database_service_name():
         if Config._database_service_name is None:
-            Config._database_service_name = os.getenv('MAIN_DATASTORE_SERVICE_NAME', 'main-data-store')
+            Config._database_service_name = os.getenv('MONGO_DB_NAME', 'mongo')
         return Config._database_service_name
 
     @staticmethod
     def database_service_port():
         if Config._database_service_port is None:
-            Config._database_service_port = int(os.getenv('MAIN_DATASTORE_SERVICE_MONGO_PORT', 27017))
+            Config._database_service_port = int(os.getenv('MONGO_DB_PORT', 27017))
         return Config._database_service_port
 
     @staticmethod
-    def blog_database_name():
-        if Config._blog_database_name is None:
-            Config._blog_database_name = os.getenv('BLOG_DATABASE_NAME', 'blog_data')
-        return Config._blog_database_name
+    def trade_database_name():
+        if Config._trade_database_name is None:
+            Config._trade_database_name = os.getenv('TRADE_DATABASE_NAME', 'trade')
+        return Config._trade_database_name
 
     @staticmethod
-    def blog_drafts_collection_name():
-        if Config._blog_drafts_collection_name is None:
-            Config._blog_drafts_collection_name = os.getenv('BLOG_DRAFTS_COLLECTION_NAME', 'blog_drafts')
-        return Config._blog_drafts_collection_name
+    def trade_collection_name():
+        if Config._trade_collection_name is None:
+            Config._trade_collection_name = os.getenv('TRADE_COLLECTION_NAME', 'trade_history')
+        return Config._trade_collection_name
 
 
 class ProductionConfig(Config):

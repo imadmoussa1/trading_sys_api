@@ -18,3 +18,10 @@ Jinja2>=2.10.1
 MarkupSafe==1.0
 werkzeug>=0.15.3
 uwsgi==2.0.18
+setuptools==41.0.1
+pytest==4.3.1
+pytest-cov==2.6.1
+pyti==0.2.2
+fxcmpy==1.2.4
+numpy==1.15.4
+pandas==0.25.1

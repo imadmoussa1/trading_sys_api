@@ -7,7 +7,7 @@ from .config import Config
 
 class DataStoreClient:
     _mongo_client = None
-    _blog_database = None
+    _trade_database = None
 
     @staticmethod
     def mongo_client():
@@ -26,17 +26,17 @@ class DataStoreClient:
             return False
 
     @staticmethod
-    def blog_database():
-        if DataStoreClient._blog_database is None:
-            DataStoreClient._blog_database = DataStoreClient.mongo_client()[Config.blog_database_name()]
-        return DataStoreClient._blog_database
+    def trade_database():
+        if DataStoreClient._trade_database is None:
+            DataStoreClient._trade_database = DataStoreClient.mongo_client()[Config.trade_database_name()]
+        return DataStoreClient._trade_database
 
     @staticmethod
-    def blog_drafts_collection():
-        return DataStoreClient.blog_database()[Config.blog_drafts_collection_name()]
+    def trade_collection():
+        return DataStoreClient.trade_database()[Config.trade_collection_name()]
 
     @staticmethod
     def create_index():
         index_name = 'title_index'
-        if index_name not in DataStoreClient.blog_drafts_collection().index_information():
-            return DataStoreClient.blog_drafts_collection().create_index([('title', pymongo.TEXT)], name=index_name, default_language='english')
+        if index_name not in DataStoreClient.trade_collection().index_information():
+            return DataStoreClient.trade_collection().create_index([('title', pymongo.TEXT)], name=index_name, default_language='english')
